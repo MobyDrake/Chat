@@ -1,0 +1,47 @@
+package Client;
+
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+
+
+
+public class MessageTextArea extends TextArea {
+    private String text;
+    private int maxWidth = 380;
+    private int defaultWidth = 40;
+    private double fontSize = 16;
+
+    public MessageTextArea (String text){
+        this.text = text;
+        setWrapText(true);
+        setEditable(false);
+        getTextAreaBounds(this, text);
+        setText(text);
+    }
+
+    private void getTextAreaBounds(TextArea textArea, String message){
+        Text text = new Text(message);
+        text.setFont(new Font(fontSize));
+        StackPane pane = new StackPane(text);
+        pane.layout();
+        double width = text.getLayoutBounds().getWidth();
+        textArea.setPrefWidth(width);
+        textArea.setMaxWidth(maxWidth);
+        //textArea.setPrefRowCount(getTextAreaHeight(width));
+        textArea.setPrefHeight(text.getLayoutBounds().getHeight());
+        textArea.setText(message);
+    }
+
+    private int getTextAreaHeight(double width){
+        int rows = (int) (width / maxWidth * 2);
+        int rowLimit = 10;
+
+        if(rows < rowLimit){
+            return rows;
+        } else {
+            return rowLimit;
+        }
+    }
+}
