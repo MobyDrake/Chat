@@ -9,9 +9,10 @@ public class ClientHandler {
     private DataOutputStream out;
     private DataInputStream in;
     private Socket socket;
-    private MainServer server;
+    private MyServer server;
+    private String nickname;
 
-    public ClientHandler(Socket socket, MainServer server) {
+    public ClientHandler(Socket socket, MyServer server) {
         try {
             this.socket = socket;
             this.server = server;
@@ -22,12 +23,31 @@ public class ClientHandler {
                 @Override
                 public void run() {
                     try {
+                        while (true) {
+                            String str = in.readUTF();
+
+                            if (str.startsWith("/auth")) {
+                                String[] token = str.split(" ");
+                                nickname = AuthService.getNicknameByLoginAndPass(token[1], token[2]);
+                                if (nickname != null) {
+                                    sendMsg("/authOk");
+                                    server.subscribe(ClientHandler.this);
+                                    server.broadcastMsg(nickname + "вошёл в чат");
+                                    break;
+                                } else {
+                                    sendMsg("Неверный логи или пароль");
+                                }
+                            }
+
+                        }
+
                         while(true) {
                             String text = in.readUTF();
                             if (text.equals("/end")) {
+                                sendMsg("/serverClosed");
                                 break;
                             }
-                            server.broadcastMsg(text);
+                            server.broadcastMsg(nickname + ": " +text);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -47,6 +67,8 @@ public class ClientHandler {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        server.unsubscribe(ClientHandler.this);
+                        sendMsg(nickname + "вышел из чата");
                     }
                 }
             }).start();
@@ -62,5 +84,4 @@ public class ClientHandler {
             e.printStackTrace();
         }
     }
-
 }
