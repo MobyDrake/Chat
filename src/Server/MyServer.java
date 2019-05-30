@@ -24,6 +24,7 @@ public class MyServer {
             while (true) {
                 socket = server.accept();
                 System.out.println("Клиент подключился");
+                new ClientHandler(socket, this);
             }
 
         } catch (IOException e) {
@@ -50,6 +51,17 @@ public class MyServer {
         }
     }
 
+    public void sendPersonalMsg(String nickSending, String nickReceiver, String msg) {
+        for (ClientHandler cl : clients) {
+            if (cl.getNickname().equals(nickReceiver)) {
+                cl.sendMsg(String.format("Личное от %s: %s", nickSending, msg));
+            }
+            if (cl.getNickname().equals(nickSending)) {
+                cl.sendMsg(String.format("Личное для %s: %s", nickReceiver, msg));
+            }
+        }
+    }
+
     public void subscribe(ClientHandler o) {
         clients.add(o);
     }
@@ -57,4 +69,14 @@ public class MyServer {
     public void unsubscribe(ClientHandler o) {
         clients.remove(o);
     }
+
+    public boolean isNickBusy(String nick) {
+        for (ClientHandler cl : clients) {
+            if (cl.getNickname().equals(nick)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

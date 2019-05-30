@@ -26,7 +26,7 @@ public class AuthService {
     }
 
     public static String getNicknameByLoginAndPass(String login, String password) {
-        String sql = String.format("select nickname from main where login = '%s' and password = '%s'", login, password);
+        String sql = String.format("SELECT nickname FROM main where login = '%s' and password = '%s'", login, password);
         try {
             ResultSet rs = statement.executeQuery(sql);
             if (rs.next()) {

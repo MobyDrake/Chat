@@ -23,6 +23,7 @@ public class ClientHandler {
                 @Override
                 public void run() {
                     try {
+                        //аторизация
                         while (true) {
                             String str = in.readUTF();
 
@@ -30,10 +31,14 @@ public class ClientHandler {
                                 String[] token = str.split(" ");
                                 nickname = AuthService.getNicknameByLoginAndPass(token[1], token[2]);
                                 if (nickname != null) {
-                                    sendMsg("/authOk");
-                                    server.subscribe(ClientHandler.this);
-                                    server.broadcastMsg(nickname + "вошёл в чат");
-                                    break;
+                                    if(!server.isNickBusy(nickname)) {
+                                        sendMsg("/authOk");
+                                        server.subscribe(ClientHandler.this);
+                                        server.broadcastMsg(nickname + " вошёл в чат");
+                                        break;
+                                    } else {
+                                        sendMsg("Учётная запись уже используется");
+                                    }
                                 } else {
                                     sendMsg("Неверный логи или пароль");
                                 }
@@ -41,17 +46,25 @@ public class ClientHandler {
 
                         }
 
+                        //отправка сообщений
                         while(true) {
-                            String text = in.readUTF();
-                            if (text.equals("/end")) {
+                            String msg = in.readUTF();
+                            if (msg.equals("/end")) {
                                 sendMsg("/serverClosed");
                                 break;
                             }
-                            server.broadcastMsg(nickname + ": " +text);
+                            if (msg.startsWith("/w")) {
+                                sendInterlocutor(msg);
+                            } else {
+                                server.broadcastMsg(nickname + ": " + msg);
+                            }
                         }
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     } finally {
+                        server.unsubscribe(ClientHandler.this);
+                        sendMsg(nickname + "вышел из чата");
                         try {
                             in.close();
                         } catch (IOException e) {
@@ -67,8 +80,6 @@ public class ClientHandler {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                        server.unsubscribe(ClientHandler.this);
-                        sendMsg(nickname + "вышел из чата");
                     }
                 }
             }).start();
@@ -83,5 +94,14 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    void sendInterlocutor(String msg) {
+        String[] token = msg.split(" ");
+        server.sendPersonalMsg(nickname, token[1], token[2]);
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 }

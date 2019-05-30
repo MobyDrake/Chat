@@ -9,9 +9,9 @@ import javafx.scene.text.Text;
 
 public class MessageTextArea extends TextArea {
     private String text;
-    private int maxWidth = 380;
+    private int maxWidth = 360;
     private int defaultWidth = 40;
-    private double fontSize = 16;
+    private double fontSize = 18;
 
     public MessageTextArea (String text){
         this.text = text;
@@ -29,8 +29,8 @@ public class MessageTextArea extends TextArea {
         double width = text.getLayoutBounds().getWidth();
         textArea.setPrefWidth(width);
         textArea.setMaxWidth(maxWidth);
-        //textArea.setPrefRowCount(getTextAreaHeight(width));
-        textArea.setPrefHeight(text.getLayoutBounds().getHeight());
+        textArea.setPrefRowCount(getTextAreaHeight(width));
+//        textArea.setPrefHeight(text.getLayoutBounds().getHeight());
         textArea.setText(message);
     }
 

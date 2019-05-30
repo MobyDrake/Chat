@@ -8,13 +8,12 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
 <VBox prefHeight="275.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Client.Controller">
 <!--   fx:controller="Client.Controller"-->
-   <BorderPane fx:id="borderChat" managed="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="275.0" prefWidth="300.0" StackPane.alignment="CENTER" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
+   <BorderPane fx:id="borderChat" managed="false" visible="false" VBox.vgrow="ALWAYS" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
       <center>
          <ScrollPane hbarPolicy="NEVER" BorderPane.alignment="CENTER">
             <content>
@@ -25,7 +24,7 @@
       <bottom>
          <HBox alignment="CENTER" BorderPane.alignment="CENTER">
             <children>
-               <TextArea fx:id="msgText" maxWidth="257.0" prefHeight="1.0" prefRowCount="1" prefWidth="257.0" promptText="Сообщение" wrapText="true" HBox.hgrow="ALWAYS">
+               <TextArea fx:id="msgText" maxWidth="380.0" prefHeight="1.0" prefRowCount="1" prefWidth="257.0" promptText="Сообщение" wrapText="true" HBox.hgrow="ALWAYS">
                   <font>
                      <Font size="12.0" />
                   </font></TextArea>
@@ -35,7 +34,7 @@
       </bottom>
    </BorderPane>
 
-   <BorderPane fx:id="borderAuth" prefHeight="275.0" prefWidth="300.0" visible="false">
+   <BorderPane fx:id="borderAuth" prefHeight="275.0" prefWidth="300.0">
       <center>
          <VBox alignment="CENTER" fillWidth="false" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>

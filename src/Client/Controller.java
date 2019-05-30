@@ -1,6 +1,8 @@
 package Client;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -50,15 +52,19 @@ public class Controller {
         if(!isAuth) {
             borderAuth.setVisible(true);
             borderAuth.setManaged(true);
+            borderAuth.setDisable(false);
 
             borderChat.setVisible(false);
             borderChat.setManaged(false);
+            borderChat.setDisable(true);
         } else {
             borderAuth.setVisible(false);
             borderAuth.setManaged(false);
+            borderAuth.setDisable(true);
 
             borderChat.setVisible(true);
             borderChat.setManaged(true);
+            borderChat.setDisable(false);
         }
     }
 
@@ -72,6 +78,7 @@ public class Controller {
                 @Override
                 public void run() {
                     try {
+                        //цикл авторизации
                         while (true) {
                             String str = in.readUTF();
                             if (str.equals("/authOk")) {
@@ -87,6 +94,7 @@ public class Controller {
                             }
                         }
 
+                        //цикл получения сообщений
                         while (true) {
                             String text = in.readUTF();
                             //поток обновления интерфейса
@@ -113,6 +121,12 @@ public class Controller {
 
         } catch (IOException e) {
             e.printStackTrace();
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    label.setText("Проблемы с сервером :С");
+                }
+            });
         }
     }
 
