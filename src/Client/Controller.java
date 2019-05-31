@@ -1,8 +1,6 @@
 package Client;
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -12,6 +10,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Controller {
 
@@ -37,10 +37,15 @@ public class Controller {
         TextArea msgText;
         @FXML
         Label label;
+        @FXML
+        ListView<String> listClients;
 
     final String IP_ADRESS = "localhost";
     final int PORT = 8189;
     private boolean isAuth;
+    private final int timeToDisconnect = 120000;
+    private Timer timer = new Timer();
+    private boolean timerRun = false;
 
     Socket socket;
     DataInputStream in;
@@ -98,15 +103,37 @@ public class Controller {
                         while (true) {
                             String text = in.readUTF();
                             //поток обновления интерфейса
-                            //проверить небходимость if
-                            Platform.runLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    chatBox.setSpacing(10);
-                                    chatBox.getChildren().add(new MessageTextArea(text));
+                            if (text.startsWith("/")) {
+                                if (text.startsWith("/serverClosed")) {
+                                    setAuth(false);
                                 }
-                            });
+                                if (text.startsWith("/listClients")) {
+                                    String[] token = text.split(" ");
+
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            listClients.getItems().clear();
+                                            for (int i = 1; i < token.length; i++) {
+                                                listClients.getItems().add(token[i]);
+                                            }
+                                        }
+                                    });
+                                }
+                            } else {
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        chatBox.setSpacing(10);
+                                        chatBox.getChildren().add(new MessageTextArea(text));
+                                    }
+                                });
+                            }
+                            if (!timerRun) {
+                                timerToDisconnect();
+                            }
                         }
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     } finally {
@@ -124,13 +151,15 @@ public class Controller {
             Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
-                    label.setText("Проблемы с сервером :С");
+                    label.setText("Проблемы с сервером...");
                 }
             });
         }
     }
 
     public void sendMsg() {
+        timer.cancel();
+        timerRun = false;
         try {
             if (!msgText.getText().isEmpty()) {
                 out.writeUTF(msgText.getText().trim());
@@ -154,6 +183,20 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void timerToDisconnect() {
+        timerRun = true;
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    out.writeUTF("/end");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, timeToDisconnect, timeToDisconnect);
     }
 
 }

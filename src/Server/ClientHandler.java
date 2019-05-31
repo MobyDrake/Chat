@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClientHandler {
     private DataOutputStream out;
@@ -11,6 +12,7 @@ public class ClientHandler {
     private Socket socket;
     private MyServer server;
     private String nickname;
+    private ArrayList<String> blackList;
 
     public ClientHandler(Socket socket, MyServer server) {
         try {
@@ -34,7 +36,7 @@ public class ClientHandler {
                                     if(!server.isNickBusy(nickname)) {
                                         sendMsg("/authOk");
                                         server.subscribe(ClientHandler.this);
-                                        server.broadcastMsg(nickname + " вошёл в чат");
+                                        server.broadcastMsg(ClientHandler.this, nickname + " вошёл в чат");
                                         break;
                                     } else {
                                         sendMsg("Учётная запись уже используется");
@@ -49,14 +51,19 @@ public class ClientHandler {
                         //отправка сообщений
                         while(true) {
                             String msg = in.readUTF();
-                            if (msg.equals("/end")) {
-                                sendMsg("/serverClosed");
-                                break;
-                            }
-                            if (msg.startsWith("/w")) {
-                                sendInterlocutor(msg);
+                            if (msg.startsWith("/")) {
+                                if (msg.equals("/end")) {
+                                    sendMsg("/serverClosed");
+                                    break;
+                                }
+                                if (msg.startsWith("/w")) {
+                                    sendInterlocutor(msg);
+                                }
+                                if (msg.startsWith("/blacklist")) {
+                                    addBlackList(msg);
+                                }
                             } else {
-                                server.broadcastMsg(nickname + ": " + msg);
+                                server.broadcastMsg(ClientHandler.this, nickname + ": " + msg);
                             }
                         }
 
@@ -64,7 +71,7 @@ public class ClientHandler {
                         e.printStackTrace();
                     } finally {
                         server.unsubscribe(ClientHandler.this);
-                        sendMsg(nickname + "вышел из чата");
+                        server.broadcastMsg(ClientHandler.this,nickname + " вышел из чата");
                         try {
                             in.close();
                         } catch (IOException e) {
@@ -96,9 +103,25 @@ public class ClientHandler {
         }
     }
 
-    void sendInterlocutor(String msg) {
-        String[] token = msg.split(" ");
+    public void sendInterlocutor(String msg) {
+        String[] token = msg.split(" ", 3);
         server.sendPersonalMsg(nickname, token[1], token[2]);
+    }
+
+    public void addBlackList(String msg) {
+        String[] token = msg.split(" ");
+        if (server.hasClient(token[1])) {
+            if (AuthService.addNickBlackListSQL(nickname, token[1])) {
+                sendMsg(String.format("Вы добавили %s в чёрный список", token[1]));
+            }
+        } else {
+            sendMsg("Такого пользователся нет");
+        }
+    }
+
+    public boolean checkBlackList(String nickname) {
+        this.blackList = AuthService.getBlackListSQL(this.nickname);
+        return this.blackList.contains(nickname);
     }
 
     public String getNickname() {

@@ -1,6 +1,10 @@
 package Server;
 
+import java.lang.reflect.Array;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AuthService {
     private static Connection connection;
@@ -36,6 +40,38 @@ public class AuthService {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean addNickBlackListSQL(String nick, String badBoy) {
+        ArrayList<String> list = getBlackListSQL(nick);
+        if(!list.contains(badBoy)) {
+            String sql = String.format("INSERT INTO blackList(nickname, badBoy)\n" +
+                    "VALUES('%s', '%s')", nick, badBoy);
+            try {
+                statement.execute(sql);
+                return true;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    public static ArrayList<String> getBlackListSQL(String nick) {
+        ArrayList<String> list = new ArrayList<>();
+        String sql = "select * from blackList";
+        try {
+            ResultSet rs = statement.executeQuery(sql);
+            while(rs.next()) {
+                if (rs.getString("nickname").equals(nick)) {
+                    list.add(rs.getString("badBoy"));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
 }
