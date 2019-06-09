@@ -2,37 +2,78 @@ package Client;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class Controller implements Initializable {
-    @FXML
-    VBox chatBox;
+public class Controller {
 
-    @FXML
-    TextArea msgText;
+        @FXML
+        BorderPane borderAuth;
+
+        @FXML
+        BorderPane borderChat;
+
+        @FXML
+        TextField loginField;
+
+        @FXML
+        PasswordField passwordField;
+
+        @FXML
+        Button btnLogin;
+
+        @FXML
+        VBox chatBox;
+
+        @FXML
+        TextArea msgText;
+        @FXML
+        Label label;
+        @FXML
+        ListView<String> listClients;
 
     final String IP_ADRESS = "localhost";
     final int PORT = 8189;
+    private boolean isAuth;
+    private final int timeToDisconnect = 120000;
+    private Timer timer = new Timer();
+    private boolean timerRun = false;
 
     Socket socket;
     DataInputStream in;
     DataOutputStream out;
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+    public void setAuth(boolean isAuth) {
+        this.isAuth = isAuth;
+
+        if(!isAuth) {
+            borderAuth.setVisible(true);
+            borderAuth.setManaged(true);
+            borderAuth.setDisable(false);
+
+            borderChat.setVisible(false);
+            borderChat.setManaged(false);
+            borderChat.setDisable(true);
+        } else {
+            borderAuth.setVisible(false);
+            borderAuth.setManaged(false);
+            borderAuth.setDisable(true);
+
+            borderChat.setVisible(true);
+            borderChat.setManaged(true);
+            borderChat.setDisable(false);
+        }
+    }
+
+    public void connectClient() {
         try {
             socket = new Socket(IP_ADRESS, PORT);
             in = new DataInputStream(socket.getInputStream());
@@ -42,17 +83,57 @@ public class Controller implements Initializable {
                 @Override
                 public void run() {
                     try {
+                        //цикл авторизации
+                        while (true) {
+                            String str = in.readUTF();
+                            if (str.equals("/authOk")) {
+                                setAuth(true);
+                                break;
+                            } else {
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        label.setText(str);
+                                    }
+                                });
+                            }
+                        }
+
+                        //цикл получения сообщений
                         while (true) {
                             String text = in.readUTF();
                             //поток обновления интерфейса
-                            Platform.runLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    chatBox.setSpacing(10);
-                                    chatBox.getChildren().add(new MessageTextArea(text));
+                            if (text.startsWith("/")) {
+                                if (text.startsWith("/serverClosed")) {
+                                    setAuth(false);
                                 }
-                            });
+                                if (text.startsWith("/listClients")) {
+                                    String[] token = text.split(" ");
+
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            listClients.getItems().clear();
+                                            for (int i = 1; i < token.length; i++) {
+                                                listClients.getItems().add(token[i]);
+                                            }
+                                        }
+                                    });
+                                }
+                            } else {
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        chatBox.setSpacing(10);
+                                        chatBox.getChildren().add(new MessageTextArea(text));
+                                    }
+                                });
+                            }
+                            if (!timerRun) {
+                                timerToDisconnect();
+                            }
                         }
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     } finally {
@@ -67,14 +148,20 @@ public class Controller implements Initializable {
 
         } catch (IOException e) {
             e.printStackTrace();
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    label.setText("Проблемы с сервером...");
+                }
+            });
         }
     }
 
     public void sendMsg() {
+        timer.cancel();
+        timerRun = false;
         try {
             if (!msgText.getText().isEmpty()) {
-//                chatBox.setSpacing(10);
-//                chatBox.getChildren().add(new MessageTextArea(msgText.getText()));
                 out.writeUTF(msgText.getText().trim());
                 msgText.clear();
 //              msgText.requestFocus(); //не сбрасывает фокус с поля
@@ -82,6 +169,34 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public void authClient() {
+        if (socket == null || socket.isClosed()) {
+            connectClient();
+        }
+
+        try {
+            out.writeUTF("/auth " + loginField.getText() + " " + passwordField.getText());
+            loginField.clear();
+            passwordField.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void timerToDisconnect() {
+        timerRun = true;
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    out.writeUTF("/end");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, timeToDisconnect, timeToDisconnect);
     }
 
 }
