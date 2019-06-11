@@ -14,7 +14,7 @@
 
 <VBox prefHeight="275.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Client.Controller">
 <!--   fx:controller="Client.Controller"-->
-   <BorderPane fx:id="borderChat" managed="false" visible="false" VBox.vgrow="ALWAYS" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
+   <BorderPane fx:id="borderChat" managed="false" prefWidth="23.0" visible="false" VBox.vgrow="ALWAYS" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
       <center>
          <ScrollPane hbarPolicy="NEVER" BorderPane.alignment="CENTER">
             <content>

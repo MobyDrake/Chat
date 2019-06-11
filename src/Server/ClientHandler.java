@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class ClientHandler {
     private DataOutputStream out;
@@ -33,9 +34,10 @@ public class ClientHandler {
                                 String[] token = str.split(" ");
                                 nickname = AuthService.getNicknameByLoginAndPass(token[1], token[2]);
                                 if (nickname != null) {
-                                    if(!server.isNickBusy(nickname)) {
+                                    if(!server.hasClient(nickname)) {
                                         sendMsg("/authOk");
                                         server.subscribe(ClientHandler.this);
+                                        server.sendHistory(ClientHandler.this);
                                         server.broadcastMsg(ClientHandler.this, nickname + " вошёл в чат");
                                         break;
                                     } else {
@@ -63,7 +65,10 @@ public class ClientHandler {
                                     addBlackList(msg);
                                 }
                             } else {
-                                server.broadcastMsg(ClientHandler.this, nickname + ": " + msg);
+                                Calendar calendar = Calendar.getInstance();
+                                String str = String.format("%tl:%tM %tp %s: %s", calendar, calendar, calendar, nickname, msg);
+                                AuthService.addMsgHistory(nickname, str);
+                                server.broadcastMsg(ClientHandler.this, str);
                             }
                         }
 
