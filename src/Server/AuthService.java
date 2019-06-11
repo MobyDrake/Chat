@@ -74,4 +74,31 @@ public class AuthService {
         return list;
     }
 
+    public static void addMsgHistory(String nickname, String msg) {
+        String sql = String.format("INSERT INTO history(nickname, message)\n" +
+                "VALUES('%s', '%s')", nickname, msg);
+        try {
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ArrayList<String> getHistoryMsg() {
+        ArrayList<String> list = new ArrayList<>();
+        String sql = "select * from history";
+
+        try {
+            ResultSet rs = statement.executeQuery(sql);
+            while(rs.next()) {
+                list.add(rs.getString("message"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+
 }

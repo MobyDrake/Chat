@@ -86,7 +86,7 @@ public class MyServer {
         broadcastClientsList();
     }
 
-    public boolean isNickBusy(String nick) {
+    public boolean hasClient(String nick) {
         for (ClientHandler cl : clients) {
             if (cl.getNickname().equals(nick)) {
                 return true;
@@ -95,11 +95,14 @@ public class MyServer {
         return false;
     }
 
-    public  boolean hasClient(String nick) {
-        for(ClientHandler cl : clients) {
-            if (cl.getNickname().equals(nick)) return true;
+    public void sendHistory(ClientHandler o) {
+        StringBuilder sb = new StringBuilder("/History/h");
+
+        for(String str : AuthService.getHistoryMsg()) {
+            sb.append(str).append("/h");
         }
-        return false;
+
+        o.sendMsg(sb.toString());
     }
 
 }

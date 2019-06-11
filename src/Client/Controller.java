@@ -10,6 +10,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -43,9 +45,9 @@ public class Controller {
     final String IP_ADRESS = "localhost";
     final int PORT = 8189;
     private boolean isAuth;
-    private final int timeToDisconnect = 120000;
-    private Timer timer = new Timer();
-    private boolean timerRun = false;
+    //private final int timeToDisconnect = 120000;
+    //private Timer timer = new Timer();
+    //private boolean timerRun = false;
 
     Socket socket;
     DataInputStream in;
@@ -120,6 +122,19 @@ public class Controller {
                                         }
                                     });
                                 }
+                                if (text.startsWith("/History")) {
+                                    String[] token = text.split("/h");
+
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            chatBox.setSpacing(10);
+                                            for (int i = 1; i < token.length; i++) {
+                                                chatBox.getChildren().add(new MessageTextArea(token[i]));
+                                            }
+                                        }
+                                    });
+                                }
                             } else {
                                 Platform.runLater(new Runnable() {
                                     @Override
@@ -129,9 +144,9 @@ public class Controller {
                                     }
                                 });
                             }
-                            if (!timerRun) {
-                                timerToDisconnect();
-                            }
+//                            if (!timerRun) {
+//                                timerToDisconnect();
+//                            }
                         }
 
                     } catch (IOException e) {
@@ -158,8 +173,9 @@ public class Controller {
     }
 
     public void sendMsg() {
-        timer.cancel();
-        timerRun = false;
+        //таймер
+//        timer.cancel();
+//        timerRun = false;
         try {
             if (!msgText.getText().isEmpty()) {
                 out.writeUTF(msgText.getText().trim());
@@ -185,18 +201,20 @@ public class Controller {
         }
     }
 
-    public void timerToDisconnect() {
-        timerRun = true;
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                try {
-                    out.writeUTF("/end");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, timeToDisconnect, timeToDisconnect);
-    }
+//    public void timerToDisconnect() {
+//        //попробовать следующие решение
+//        //http://pro-java.ru/java-dlya-opytnyx/tajm-aut-soketov-java/
+//        timerRun = true;
+//        timer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                try {
+//                    out.writeUTF("/end");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }, timeToDisconnect, timeToDisconnect);
+//    }
 
 }
